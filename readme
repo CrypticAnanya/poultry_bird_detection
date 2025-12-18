@@ -1,0 +1,7 @@
+Steps to run the program :-
+
+1.Download the code zip file and extract it on your machine .Open VS Code and first install requirements.txt file.
+2.Then run uvicorn app.main:app --reload command on your terminal.
+3. When program runs open the link and to get results type ui/ infront of thw url.
+4.Upload the video and process the results.
+
