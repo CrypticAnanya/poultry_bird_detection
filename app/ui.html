@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Poultry Video Analytics</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+            background: #f7f7f7;
+        }
+        h1 {
+            color: #333;
+        }
+        section {
+            background: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background: #efefef;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .loading {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🐔 Poultry Video Analytics</h1>
+
+<section>
+    <h3>Upload Video</h3>
+    <input type="file" id="videoFile">
+    <br><br>
+    <button onclick="analyze()">Analyze</button>
+    <p id="status"></p>
+</section>
+
+<section id="countsSection" style="display:none;">
+    <h3>📊 Bird Count Over Time</h3>
+    <table id="countsTable">
+        <tr>
+            <th>Time (s)</th>
+            <th>Bird Count</th>
+        </tr>
+    </table>
+</section>
+
+<section id="weightsSection" style="display:none;">
+    <h3>⚖ Weight Estimates (Relative Index)</h3>
+    <table id="weightsTable">
+        <tr>
+            <th>Track ID</th>
+            <th>Time (s)</th>
+            <th>Weight Index</th>
+        </tr>
+    </table>
+</section>
+
+<section id="tracksSection" style="display:none;">
+    <h3>🆔 Sample Tracks</h3>
+    <pre id="tracksOutput"></pre>
+</section>
+
+<section id="artifactSection" style="display:none;">
+    <h3>🎥 Output Artifact</h3>
+    <p id="artifactPath"></p>
+</section>
+
+<script>
+async function analyze() {
+    const fileInput = document.getElementById("videoFile");
+    if (!fileInput.files.length) {
+        alert("Please select a video file");
+        return;
+    }
+
+    document.getElementById("status").innerText = "Processing... Please wait.";
+    document.getElementById("status").className = "loading";
+
+    const formData = new FormData();
+    formData.append("video", fileInput.files[0]);
+
+    const response = await fetch("/analyze_video", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+    document.getElementById("status").innerText = "Processing complete ✔";
+
+    // --- Counts ---
+    const countsTable = document.getElementById("countsTable");
+    data.counts.forEach(row => {
+        countsTable.innerHTML += `
+            <tr>
+                <td>${row.time}</td>
+                <td>${row.count}</td>
+            </tr>
+        `;
+    });
+    document.getElementById("countsSection").style.display = "block";
+
+    // --- Weights ---
+    const weightsTable = document.getElementById("weightsTable");
+    data.weight_estimates.values.forEach(w => {
+        weightsTable.innerHTML += `
+            <tr>
+                <td>${w.track_id}</td>
+                <td>${w.time}</td>
+                <td>${w.weight_index}</td>
+            </tr>
+        `;
+    });
+    document.getElementById("weightsSection").style.display = "block";
+
+    // --- Tracks ---
+    document.getElementById("tracksOutput").innerText =
+        JSON.stringify(data.tracks_sample, null, 2);
+    document.getElementById("tracksSection").style.display = "block";
+
+    // --- Artifact ---
+    document.getElementById("artifactPath").innerText =
+        data.artifacts.annotated_video;
+    document.getElementById("artifactSection").style.display = "block";
+}
+</script>
+
+</body>
+</html>
